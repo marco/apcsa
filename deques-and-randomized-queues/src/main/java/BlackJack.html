@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <title>Blackjack</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
+        <script   src="https://code.jquery.com/jquery-3.3.1.min.js"   integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="   crossorigin="anonymous"></script>
+    </head>
+    <body class="mx-5 my-4">
+        <h1>
+            Blackjack
+        </h1>
+        <h3>
+            Scores
+        </h3>
+        <p id="scores">
+            Dealer: 0
+            <br />
+            Player: 0
+        </p>
+        <h3>
+            Their hand
+        </h3>
+        <p id="their-hand">
+        </p>
+        <h3>
+            Your hand
+        </h3>
+        <p id="your-hand">
+        </p>
+        <button class="btn btn-primary" type="button" onclick="hit();">Hit</button>
+        <button class="btn btn-warning" type="button" onclick="stay();">Stay</button>
+
+        <script type="text/javascript">
+            let dealerSum = 0;
+            let playerSum = 0;
+            let dealerScore = 0;
+            let playerScore = 0;
+
+            function hit(callback) {
+                $.get('/get-next-card', (data) => {
+                    console.log(data);
+                    $('#your-hand').append('<li>' + data + '</li>');
+                    playerSum += parseInt(data.charAt(0));
+
+                    if (playerSum > 21) {
+                        alert('Your sum: ' + playerSum + '. Busted!');
+                        dealerScore++;
+                        dealerSum = 0;
+                        playerSum = 0;
+                        $('#their-hand').html('');
+                        $('#your-hand').html('');
+                        $('#scores').html('Dealer: ' + dealerScore + '<br />Player: ' + playerScore);
+                        hit(() => { hit(); });
+                        callback();
+                        return;
+                    }
+
+                    if (dealerSum <= 17) {
+                        $.get('/get-next-card', (data) => {
+                            console.log(data);
+                            $('#their-hand').append('<li>' + data + '</li>');
+                            dealerSum += parseInt(data.charAt(0));
+
+                            if (dealerSum > 21) {
+                                alert('Dealer Sum: ' + playerSum + ' (busted). You win!');
+                                playerScore++;
+                                dealerSum = 0;
+                                playerSum = 0;
+                                $('#their-hand').html('');
+                                $('#your-hand').html('');
+                                $('#scores').html('Dealer: ' + dealerScore + '<br />Player: ' + playerScore);
+                                hit(() => { hit(); });
+                                callback();
+                                return;
+                            }
+
+                            callback();
+                        });
+                        return;
+                    }
+
+                    callback();
+                });
+            }
+
+            function stay() {
+                if (playerSum >= dealerSum) {
+                    alert('You win!');
+                    playerScore++;
+                    dealerSum = 0;
+                    playerSum = 0;
+                    $('#their-hand').html('');
+                    $('#your-hand').html('');
+                    $('#scores').html('Dealer: ' + dealerScore + '<br />Player: ' + playerScore);
+                    hit(() => { hit(); });
+                } else {
+                    alert('Dealer is closer to 21. You lose!')
+                    dealerScore++;
+                    dealerSum = 0;
+                    playerSum = 0;
+                    $('#their-hand').html('');
+                    $('#your-hand').html('');
+                    $('#scores').html('Dealer: ' + dealerScore + '<br />Player: ' + playerScore);
+                    hit(() => { hit(); });
+                }
+            }
+
+            hit(() => { hit(); });
+        </script>
+    </body>
+</html>
